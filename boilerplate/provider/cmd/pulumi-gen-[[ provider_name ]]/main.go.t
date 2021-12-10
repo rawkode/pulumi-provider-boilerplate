@@ -75,7 +75,7 @@ func main() {
 	}
 }
 
-func readSchema(schemaPath string) (*schema.Package, error) {
+func readSchema(schemaPath string, version string) (*schema.Package, error) {
 	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading schema")
@@ -92,6 +92,7 @@ func readSchema(schemaPath string) (*schema.Package, error) {
 	if err = json.Unmarshal(schemaBytes, &spec); err != nil {
 		return nil, errors.Wrap(err, "unmarshalling schema")
 	}
+	spec.Version = version
 
 	pkg, err := schema.ImportSpec(spec, nil)
 	if err != nil {
