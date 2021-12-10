@@ -7,15 +7,17 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	providerVersion "[[ git_url ]]/provider/pkg/version"
 	dotnetgen "github.com/pulumi/pulumi/pkg/v3/codegen/dotnet"
 	gogen "github.com/pulumi/pulumi/pkg/v3/codegen/go"
 	nodejsgen "github.com/pulumi/pulumi/pkg/v3/codegen/nodejs"
-	pythongen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
+	pygen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
+	providerVersion "[[ git_url ]]/provider/pkg/version"
 )
 
 // TemplateDir is the path to the base directory for code generator templates.
@@ -24,32 +26,29 @@ var TemplateDir string
 // BaseDir is the path to the base pulumi-kubernetes directory.
 var BaseDir string
 
-// Language is the SDK language.
-type Language string
-
-const (
-	DotNet Language = "dotnet"
-	Go     Language = "go"
-	NodeJS Language = "nodejs"
-	Python Language = "python"
-)
-
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Printf("Usage: %s <language> <out-dir> <schema-file>\n", os.Args[0])
-		os.Exit(1)
+    flag.Usage = func() {
+		const usageFormat = "Usage: %s <language> <swagger-or-schema-file> <root-pulumi-kubernetes-dir>"
+		_, err := fmt.Fprintf(flag.CommandLine.Output(), usageFormat, os.Args[0])
+		contract.IgnoreError(err)
+		flag.PrintDefaults()
 	}
 
-	language, outdir, schemaPath := os.Args[1], os.Args[2], os.Args[3]
+    var version string
+    flag.StringVar(&version, "version", providerVersion.Version, "the provider version to record in the generated code")
+    flag.Parse()
+    args := flag.Args()
 
-	err := emitSDK(language, outdir, schemaPath)
+    language, schemaPath, outDir := args[0], args[1], args[2]
+
+    err := emitSDK(language, outDir, schemaPath, version)
 	if err != nil {
 		fmt.Printf("Failed: %s", err.Error())
 	}
 }
 
-func emitSDK(language, outdir, schemaPath string) error {
-	pkg, err := readSchema(schemaPath)
+func emitSDK(language, outdir, schemaPath string, version string) error {
+	pkg, err := readSchema(schemaPath, version)
 	if err != nil {
 		return err
 	}
