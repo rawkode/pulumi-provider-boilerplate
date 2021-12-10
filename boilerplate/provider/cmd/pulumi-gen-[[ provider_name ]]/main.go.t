@@ -75,24 +75,29 @@ func main() {
 	}
 }
 
-func readSchema(schemaPath string, version string) *schema.Package {
-	// Read in, decode, and import the schema.
+func readSchema(schemaPath string) (*schema.Package, error) {
 	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, "reading schema")
 	}
 
-	var pkgSpec schema.PackageSpec
-	if err = json.Unmarshal(schemaBytes, &pkgSpec); err != nil {
-		panic(err)
+	if strings.HasSuffix(schemaPath, ".yaml") {
+		schemaBytes, err = yaml.YAMLToJSON(schemaBytes)
+		if err != nil {
+			return nil, errors.Wrap(err, "reading YAML schema")
+		}
 	}
-	pkgSpec.Version = version
 
-	pkg, err := schema.ImportSpec(pkgSpec, nil)
+	var spec schema.PackageSpec
+	if err = json.Unmarshal(schemaBytes, &spec); err != nil {
+		return nil, errors.Wrap(err, "unmarshalling schema")
+	}
+
+	pkg, err := schema.ImportSpec(spec, nil)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, "importing schema")
 	}
-	return pkg
+	return pkg, nil
 }
 
 func writeNodeJSClient(pkg *schema.Package, outdir, templateDir string) {
