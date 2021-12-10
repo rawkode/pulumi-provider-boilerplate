@@ -8,10 +8,25 @@ provider_name:
   type: str
   help: The name of the service you're building a provider for
 
-git_url:
+git_username:
   type: str
-  help: Where will the repository be hosted?
-  placeholder: github.com/org/repository
+  help: What GitHub username will this be published under?
+  placeholder: rawkode
+
+npm_username:
+  type: str
+  help: Which username on npm will this be published?
+  default: [[git_username]]
+
+nuget_username:
+  type: str
+  help: Which username on NuGet will this be published?
+  default: [[git_username]]
+
+python_username:
+  type: str
+  help: Which username on PyPi will this be published?
+  default: [[git_username]]
 
 _tasks:
   - mkdir sdk
@@ -19,5 +34,5 @@ _tasks:
   - git branch -m main
   - git add .
   - 'git commit -m "feat: initial commit"'
-  - git remote add origin [[ git_url ]]
+  - git remote add origin github.com/[[ git_username ]]/pulumi-[[ provider_name ]]
   - cd provider && go mod tidy

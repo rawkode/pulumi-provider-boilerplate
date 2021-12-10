@@ -2,9 +2,7 @@ PROJECT_NAME := Pulumi [[ provider_name ]] Resource Provider
 
 PACK             := [[ provider_name ]]
 PACKDIR          := sdk
-PROJECT          := [[ git_url ]]
-NODE_MODULE_NAME := @pulumi/[[ provider_name ]]
-NUGET_PKG_NAME   := Pulumi.[[ provider_name ]]
+PROJECT          := github.com/[[ git_username ]]/pulumi-[[ provider_name]]
 
 PROVIDER        := pulumi-resource-${PACK}
 CODEGEN         := pulumi-gen-${PACK}
@@ -16,8 +14,13 @@ VERSION_PATH    := ${PROVIDER_PATH}/pkg/version.Version
 SCHEMA_FILE     := provider/cmd/pulumi-resource-[[ provider_name ]]/schema.yaml
 GOPATH			:= $(shell go env GOPATH)
 
+NODE_MODULE_NAME := [[ npm_username ]]/[[ provider_name ]]
+NUGET_PKG_NAME   := [[ nuget_username ]].[[ provider_name ]]
+
 WORKING_DIR     := $(shell pwd)
 TESTPARALLELISM := 4
+
+default:: gen provider ensure
 
 ensure::
 	cd provider && go mod tidy
@@ -57,7 +60,7 @@ nodejs_sdk::
 		yarn install && \
 		yarn run tsc
 	cp README.md LICENSE ${PACKDIR}/nodejs/package.json ${PACKDIR}/nodejs/yarn.lock ${PACKDIR}/nodejs/bin/
-	sed -i.bak 's/$${VERSION}/$(VERSION)/g' ${PACKDIR}/nodejs/bin/package.json
+	sed -i.bak "s/$${VERSION}/$(VERSION)/g" ${PACKDIR}/nodejs/bin/package.json
 
 python_sdk:: PYPI_VERSION := $(shell pulumictl get version --language python)
 python_sdk::

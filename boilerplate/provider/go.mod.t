@@ -1,4 +1,4 @@
-module [[ git_url ]]/provider
+module github.com/[[ git_username ]]/pulumi-[[ provider_name ]]/provider
 
 go 1.16
 

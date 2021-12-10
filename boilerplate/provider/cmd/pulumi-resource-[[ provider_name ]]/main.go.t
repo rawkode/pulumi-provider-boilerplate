@@ -1,8 +1,8 @@
 package main
 
 import (
-	"[[ git_url ]]/provider/pkg/provider"
-	"[[ git_url ]]/provider/pkg/version"
+	"github.com/[[ git_username ]]/pulumi-[[ provider_name ]]/provider/pkg/provider"
+	"github.com/[[ git_username ]]/pulumi-[[ provider_name ]]/provider/pkg/version"
 )
 
 var providerName = "[[ provider_name ]]"

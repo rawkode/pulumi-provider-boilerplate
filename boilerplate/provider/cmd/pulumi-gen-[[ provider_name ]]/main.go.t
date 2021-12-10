@@ -17,7 +17,7 @@ import (
 	pygen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
-	providerVersion "[[ git_url ]]/provider/pkg/version"
+	providerVersion "github.com/[[ git_username ]]/pulumi-[[ provider_name ]]/provider/pkg/version"
 )
 
 // TemplateDir is the path to the base directory for code generator templates.
@@ -52,8 +52,6 @@ func emitSDK(language, outdir, schemaPath string, version string) error {
 	if err != nil {
 		return err
 	}
-
-	pkg.Version = version
 
 	tool := "Pulumi SDK Generator"
 	extraFiles := map[string][]byte{}

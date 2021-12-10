@@ -22,7 +22,7 @@ language:
       Pulumi: 3.*
   go:
     generateResourceContainerTypes: true
-    importBasePath: "[[ git_url ]]/sdk/go/[[ provider_name ]]"
+    importBasePath: "github.com/[[ git_username ]]/pulumi-[[ provider_name ]]/sdk/go/[[ provider_name ]]"
   nodejs:
     dependencies:
       "@pulumi/pulumi": "^3.0.0"
