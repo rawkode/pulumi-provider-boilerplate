@@ -44,19 +44,19 @@ test_provider::
 dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl get version --language dotnet)
 dotnet_sdk::
 	rm -rf sdk/dotnet
-	$(WORKING_DIR)/bin/$(CODEGEN) -version=${DOTNET_VERSION} dotnet $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/dotnet
+	$(WORKING_DIR)/bin/$(CODEGEN) -version=${DOTNET_VERSION} dotnet $(SCHEMA_FILE) $(CURDIR)/$(SDK_DIR)/dotnet
 	cd ${SDK_DIR}/dotnet/&& \
 		echo "${DOTNET_VERSION}" >version.txt && \
 		dotnet build /p:Version=${DOTNET_VERSION}
 
 go_sdk::
 	rm -rf sdk/go
-	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} go $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/go
+	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} go $(SCHEMA_FILE) $(CURDIR)/$(SDK_DIR)/go
 
 nodejs_sdk:: VERSION := $(shell pulumictl get version --language javascript)
 nodejs_sdk::
 	rm -rf sdk/nodejs
-	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} nodejs $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/nodejs
+	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} nodejs $(SCHEMA_FILE) $(CURDIR)/$(SDK_DIR)/nodejs
 	cd ${SDK_DIR}/nodejs/ && \
 		yarn install && \
 		yarn run tsc
@@ -66,7 +66,7 @@ nodejs_sdk::
 python_sdk:: PYPI_VERSION := $(shell pulumictl get version --language python)
 python_sdk::
 	rm -rf sdk/python
-	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} python $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/python
+	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} python $(SCHEMA_FILE) $(CURDIR)/$(SDK_DIR)/python
 	cp README.md ${SDK_DIR}/python/
 	cd ${SDK_DIR}/python/ && \
 		python3 setup.py clean --all 2>/dev/null && \
