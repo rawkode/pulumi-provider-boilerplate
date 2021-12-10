@@ -16,17 +16,17 @@ git_username:
 npm_username:
   type: str
   help: Which username on npm will this be published?
-  default: [[git_username]]
+  default: "[[git_username]]"
 
 nuget_username:
   type: str
   help: Which username on NuGet will this be published?
-  default: [[git_username]]
+  default: "[[git_username]]"
 
 python_username:
   type: str
   help: Which username on PyPi will this be published?
-  default: [[git_username]]
+  default: "[[git_username]]"
 
 _tasks:
   - mkdir sdk
