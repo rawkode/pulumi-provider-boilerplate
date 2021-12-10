@@ -2,7 +2,7 @@ _subdirectory: boilerplate
 
 # We'll make this "" when Copier 6 is released (soon)
 # and all files will be templated in
-_templates_suffix: "jinja"
+_templates_suffix: ".t"
 
 provider_name:
   type: str
