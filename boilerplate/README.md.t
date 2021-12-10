@@ -1,14 +1,14 @@
-# {{ provider_name }} Pulumi Provider
+# [[ provider_name ]] Pulumi Provider
 
-This repo is a boilerplate showing how to create a native Pulumi provider.  You can search-replace `{{ provider_name }}` with the name of your desired provider as a starting point for creating a provider that manages resources in the target cloud.
+This repo is a boilerplate showing how to create a native Pulumi provider.  You can search-replace `[[ provider_name ]]` with the name of your desired provider as a starting point for creating a provider that manages resources in the target cloud.
 
 Most of the code for the provider implementation is in `pkg/provider/provider.go`.  
 
 An example of using the single resource defined in this example is in `examples/simple`.
 
-A code generator is available which generates SDKs in TypeScript, Python, Go and .NET which are also checked in to the `sdk` folder.  The SDKs are generated from a schema in `provider/cmd/pulumi-resource-{{ provider_name }}/schema.json`.  This file should be kept aligned with the resources, functions and types supported by the provider implementation.
+A code generator is available which generates SDKs in TypeScript, Python, Go and .NET which are also checked in to the `sdk` folder.  The SDKs are generated from a schema in `provider/cmd/pulumi-resource-[[ provider_name ]]/schema.json`.  This file should be kept aligned with the resources, functions and types supported by the provider implementation.
 
-Note that the generated provider plugin (`pulumi-resource-{{ provider_name }}`) must be on your `PATH` to be used by Pulumi deployments.  If creating a provider for distribution to other users, you should ensure they install this plugin to their `PATH`.
+Note that the generated provider plugin (`pulumi-resource-[[ provider_name ]]`) must be on your `PATH` to be used by Pulumi deployments.  If creating a provider for distribution to other users, you should ensure they install this plugin to their `PATH`.
 
 ## Pre-requisites
 
@@ -24,7 +24,7 @@ $ make build install
 
 # test
 $ cd examples/simple
-$ yarn link @pulumi/{{ provider_name }}
+$ yarn link @pulumi/[[ provider_name ]]
 $ yarn install
 $ pulumi stack init test
 $ pulumi up

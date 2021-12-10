@@ -1,4 +1,4 @@
-module {{ git_url }}/provider
+module [[ git_url ]]/provider
 
 go 1.16
 

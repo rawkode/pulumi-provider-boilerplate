@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	providerVersion "{{ git_url }}/provider/pkg/version"
+	providerVersion "[[ git_url ]]/provider/pkg/version"
 	dotnetgen "github.com/pulumi/pulumi/pkg/v3/codegen/dotnet"
 	gogen "github.com/pulumi/pulumi/pkg/v3/codegen/go"
 	nodejsgen "github.com/pulumi/pulumi/pkg/v3/codegen/nodejs"

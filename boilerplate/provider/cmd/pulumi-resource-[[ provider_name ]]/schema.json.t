@@ -1,8 +1,8 @@
 {
-    "name": "{{ provider_name }}",
+    "name": "[[ provider_name ]]",
     "version": "0.0.1",
     "resources": {
-        "{{ provider_name }}:index:Random": {
+        "[[ provider_name ]]:index:Random": {
             "properties": {
                 "length": {
                     "type": "integer"
@@ -33,7 +33,7 @@
         },
         "go": {
             "generateResourceContainerTypes": true,
-            "importBasePath": "{{ git_url }}/sdk/go/{{ provider_name }}"
+            "importBasePath": "[[ git_url ]]/sdk/go/[[ provider_name ]]"
         },
         "nodejs": {
             "dependencies": {

@@ -1,3 +1,3 @@
-module {{ git_url }}/tests
+module [[ git_url ]]/tests
 
 go 1.16
