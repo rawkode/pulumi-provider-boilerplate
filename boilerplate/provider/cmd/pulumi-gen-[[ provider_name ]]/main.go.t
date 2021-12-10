@@ -8,13 +8,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 	providerVersion "[[ git_url ]]/provider/pkg/version"
 	dotnetgen "github.com/pulumi/pulumi/pkg/v3/codegen/dotnet"
 	gogen "github.com/pulumi/pulumi/pkg/v3/codegen/go"
 	nodejsgen "github.com/pulumi/pulumi/pkg/v3/codegen/nodejs"
 	pythongen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
 )
 
 // TemplateDir is the path to the base directory for code generator templates.
@@ -34,45 +35,54 @@ const (
 )
 
 func main() {
-	flag.Usage = func() {
-		const usageFormat = "Usage: %s <language> <swagger-or-schema-file> <root-pulumi-kubernetes-dir>"
-		_, err := fmt.Fprintf(flag.CommandLine.Output(), usageFormat, os.Args[0])
-		contract.IgnoreError(err)
-		flag.PrintDefaults()
+	if len(os.Args) < 4 {
+		fmt.Printf("Usage: %s <language> <out-dir> <schema-file>\n", os.Args[0])
+		os.Exit(1)
 	}
 
-	var version string
-	flag.StringVar(&version, "version", providerVersion.Version, "the provider version to record in the generated code")
+	language, outdir, schemaPath := os.Args[1], os.Args[2], os.Args[3]
 
-	flag.Parse()
-	args := flag.Args()
-	if len(args) < 3 {
-		flag.Usage()
-		return
+	err := emitSDK(language, outdir, schemaPath)
+	if err != nil {
+		fmt.Printf("Failed: %s", err.Error())
+	}
+}
+
+func emitSDK(language, outdir, schemaPath string) error {
+	pkg, err := readSchema(schemaPath)
+	if err != nil {
+		return err
 	}
 
-	language, inputFile := Language(args[0]), args[1]
+	tool := "Pulumi SDK Generator"
+	extraFiles := map[string][]byte{}
 
-	BaseDir = args[2]
-	TemplateDir = filepath.Join(BaseDir, "provider", "pkg", "gen")
-	outdir := filepath.Join(BaseDir, "sdk", string(language))
-
+	var generator func() (map[string][]byte, error)
 	switch language {
-	case NodeJS:
-		templateDir := filepath.Join(TemplateDir, "nodejs-templates")
-		writeNodeJSClient(readSchema(inputFile, version), outdir, templateDir)
-	case Python:
-		templateDir := filepath.Join(TemplateDir, "python-templates")
-		writePythonClient(readSchema(inputFile, version), outdir, templateDir)
-	case DotNet:
-		templateDir := filepath.Join(TemplateDir, "dotnet-templates")
-		writeDotnetClient(readSchema(inputFile, version), outdir, templateDir)
-	case Go:
-		templateDir := filepath.Join(TemplateDir, "_go-templates")
-		writeGoClient(readSchema(inputFile, version), outdir, templateDir)
+	case "dotnet":
+		generator = func() (map[string][]byte, error) { return dotnetgen.GeneratePackage(tool, pkg, extraFiles) }
+	case "go":
+		generator = func() (map[string][]byte, error) { return gogen.GeneratePackage(tool, pkg) }
+	case "nodejs":
+		generator = func() (map[string][]byte, error) { return nodejsgen.GeneratePackage(tool, pkg, extraFiles) }
+	case "python":
+		generator = func() (map[string][]byte, error) { return pygen.GeneratePackage(tool, pkg, extraFiles) }
 	default:
-		panic(fmt.Sprintf("Unrecognized language '%s'", language))
+		return errors.Errorf("Unrecognized language %q", language)
 	}
+
+	files, err := generator()
+	if err != nil {
+		return errors.Wrapf(err, "generating %s package", language)
+	}
+
+	for f, contents := range files {
+		if err := emitFile(outdir, f, contents); err != nil {
+			return errors.Wrapf(err, "emitting file %v", f)
+		}
+	}
+
+	return nil
 }
 
 func readSchema(schemaPath string, version string) (*schema.Package, error) {
@@ -101,86 +111,13 @@ func readSchema(schemaPath string, version string) (*schema.Package, error) {
 	return pkg, nil
 }
 
-func writeNodeJSClient(pkg *schema.Package, outdir, templateDir string) {
-	_, err := nodejsgen.LanguageResources(pkg)
-	if err != nil {
-		panic(err)
-	}
-
-	overlays := map[string][]byte{}
-	files, err := nodejsgen.GeneratePackage("pulumigen", pkg, overlays)
-	if err != nil {
-		panic(err)
-	}
-
-	mustWriteFiles(outdir, files)
-}
-
-func writePythonClient(pkg *schema.Package, outdir string, templateDir string) {
-	_, err := pythongen.LanguageResources("pulumigen", pkg)
-	if err != nil {
-		panic(err)
-	}
-
-	overlays := map[string][]byte{}
-
-	files, err := pythongen.GeneratePackage("pulumigen", pkg, overlays)
-	if err != nil {
-		panic(err)
-	}
-
-	mustWriteFiles(outdir, files)
-}
-
-func writeDotnetClient(pkg *schema.Package, outdir, templateDir string) {
-	_, err := dotnetgen.LanguageResources("pulumigen", pkg)
-	if err != nil {
-		panic(err)
-	}
-
-	overlays := map[string][]byte{}
-
-	files, err := dotnetgen.GeneratePackage("pulumigen", pkg, overlays)
-	if err != nil {
-		panic(err)
-	}
-
-	for filename, contents := range files {
-		path := filepath.Join(outdir, filename)
-
-		if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			panic(err)
-		}
-		err := ioutil.WriteFile(path, contents, 0644)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func writeGoClient(pkg *schema.Package, outdir string, templateDir string) {
-	files, err := gogen.GeneratePackage("pulumigen", pkg)
-	if err != nil {
-		panic(err)
-	}
-
-	mustWriteFiles(outdir, files)
-}
-
-func mustWriteFiles(rootDir string, files map[string][]byte) {
-	for filename, contents := range files {
-		mustWriteFile(rootDir, filename, contents)
-	}
-}
-
-func mustWriteFile(rootDir, filename string, contents []byte) {
+func emitFile(rootDir, filename string, contents []byte) error {
 	outPath := filepath.Join(rootDir, filename)
-
 	if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
-		panic(err)
+		return err
 	}
-	err := ioutil.WriteFile(outPath, contents, 0644)
-	if err != nil {
-		panic(err)
+	if err := ioutil.WriteFile(outPath, contents, 0600); err != nil {
+		return err
 	}
+	return nil
 }
