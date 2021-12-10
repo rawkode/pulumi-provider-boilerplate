@@ -1,15 +1,16 @@
 PROJECT_NAME := Pulumi [[ provider_name ]] Resource Provider
 
 PACK             := [[ provider_name ]]
-PACKDIR          := sdk
 PROJECT          := github.com/[[ git_username ]]/pulumi-[[ provider_name]]
+
+PROVIDER_DIR   := provider
+SDK_DIR        := sdk
 
 PROVIDER        := pulumi-resource-${PACK}
 CODEGEN         := pulumi-gen-${PACK}
 VERSION         ?= $(shell pulumictl get version)
-PROVIDER_PATH   := provider
-SDK_PATH        := sdk
-VERSION_PATH    := ${PROVIDER_PATH}/pkg/version.Version
+
+VERSION_PATH    := ${PROVIDER_DIR}/pkg/version.Version
 
 SCHEMA_FILE     := provider/cmd/pulumi-resource-[[ provider_name ]]/schema.yaml
 GOPATH			:= $(shell go env GOPATH)
@@ -28,14 +29,14 @@ ensure::
 	cd tests && go mod tidy
 
 gen::
-	(cd provider && go build -a -o $(WORKING_DIR)/bin/${CODEGEN} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" ${PROJECT}/${PROVIDER_PATH}/cmd/$(CODEGEN))
+	(cd provider && go build -a -o $(WORKING_DIR)/bin/${CODEGEN} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" ${PROJECT}/${PROVIDER_DIR}/cmd/$(CODEGEN))
 
 provider::
 	(cd provider && VERSION=${VERSION} go generate cmd/${PROVIDER}/main.go)
-	(cd provider && go build -a -o $(WORKING_DIR)/bin/${PROVIDER} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" $(PROJECT)/${PROVIDER_PATH}/cmd/$(PROVIDER))
+	(cd provider && go build -a -o $(WORKING_DIR)/bin/${PROVIDER} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" $(PROJECT)/${PROVIDER_DIR}/cmd/$(PROVIDER))
 
 provider_debug::
-	(cd provider && go build -a -o $(WORKING_DIR)/bin/${PROVIDER} -gcflags="all=-N -l" -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" $(PROJECT)/${PROVIDER_PATH}/cmd/$(PROVIDER))
+	(cd provider && go build -a -o $(WORKING_DIR)/bin/${PROVIDER} -gcflags="all=-N -l" -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" $(PROJECT)/${PROVIDER_DIR}/cmd/$(PROVIDER))
 
 test_provider::
 	cd provider/pkg && go test -short -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} ./...
@@ -44,7 +45,7 @@ dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl get version --language dotnet)
 dotnet_sdk::
 	rm -rf sdk/dotnet
 	$(WORKING_DIR)/bin/$(CODEGEN) -version=${DOTNET_VERSION} dotnet $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/dotnet
-	cd ${PACKDIR}/dotnet/&& \
+	cd ${SDK_DIR}/dotnet/&& \
 		echo "${DOTNET_VERSION}" >version.txt && \
 		dotnet build /p:Version=${DOTNET_VERSION}
 
@@ -56,18 +57,18 @@ nodejs_sdk:: VERSION := $(shell pulumictl get version --language javascript)
 nodejs_sdk::
 	rm -rf sdk/nodejs
 	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} nodejs $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/nodejs
-	cd ${PACKDIR}/nodejs/ && \
+	cd ${SDK_DIR}/nodejs/ && \
 		yarn install && \
 		yarn run tsc
-	cp README.md LICENSE ${PACKDIR}/nodejs/package.json ${PACKDIR}/nodejs/yarn.lock ${PACKDIR}/nodejs/bin/
-	sed -i.bak "s/$${VERSION}/$(VERSION)/g" ${PACKDIR}/nodejs/bin/package.json
+	cp README.md LICENSE ${SDK_DIR}/nodejs/package.json ${SDK_DIR}/nodejs/yarn.lock ${SDK_DIR}/nodejs/bin/
+	sed -i.bak 's/$${VERSION}/$(VERSION)/g' ${SDK_DIR}/nodejs/bin/package.json
 
 python_sdk:: PYPI_VERSION := $(shell pulumictl get version --language python)
 python_sdk::
 	rm -rf sdk/python
 	$(WORKING_DIR)/bin/$(CODEGEN) -version=${VERSION} python $(SCHEMA_FILE) $(CURDIR)/$(SDK_PATH)/python
-	cp README.md ${PACKDIR}/python/
-	cd ${PACKDIR}/python/ && \
+	cp README.md ${SDK_DIR}/python/
+	cd ${SDK_DIR}/python/ && \
 		python3 setup.py clean --all 2>/dev/null && \
 		rm -rf ./bin/ ../python.bin/ && cp -R . ../python.bin && mv ../python.bin ./bin && \
 		sed -i.bak -e 's/^VERSION = .*/VERSION = "$(PYPI_VERSION)"/g' -e 's/^PLUGIN_VERSION = .*/PLUGIN_VERSION = "$(VERSION)"/g' ./bin/setup.py && \
