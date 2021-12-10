@@ -53,6 +53,8 @@ func emitSDK(language, outdir, schemaPath string, version string) error {
 		return err
 	}
 
+	pkg.Version = version
+
 	tool := "Pulumi SDK Generator"
 	extraFiles := map[string][]byte{}
 
